@@ -79,7 +79,7 @@ def main():
         except Exception as e:
             print(f'Бот упал с ошибкой: {e}')
             send_message(f'Бот упал с ошибкой: {e}')
-            time.sleep(5*60)
+            time.sleep(5 * 60)
             continue
 
 
