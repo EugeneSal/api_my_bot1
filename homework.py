@@ -36,11 +36,13 @@ logger.addHandler(f_handler)
 
 def parse_homework_status(homework):
     homework_name = homework.get('homework_name')
-    if homework.get('status') == 'approved':
+    homework_status = homework.get('status')
+    # хотел же еще сразу сделать переменную, но что то пошло не так))
+    if homework_status == 'approved':
         verdict = 'Ревьюеру всё понравилось, работа зачтена!'
-    elif homework.get('status') == 'rejected':
+    elif homework_status == 'rejected':
         verdict = 'К сожалению, в работе нашлись ошибки.'
-    elif homework.get('status') == 'reviewed':
+    elif homework_status == 'reviewing':
         verdict = 'Работа провереятся.'
     else:
         verdict = 'не известный статус работы'
@@ -49,7 +51,7 @@ def parse_homework_status(homework):
 
 
 def get_homeworks(current_timestamp):
-    # или нужно было включить user_api в константу тоже?
+    # Оки доки))
     url = URL.format('user_api/homework_statuses/')
     headers = {'Authorization': f'OAuth {PRAKTIKUM_TOKEN}'}
     try:
