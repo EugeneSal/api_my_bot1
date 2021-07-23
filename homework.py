@@ -39,15 +39,15 @@ logger.addHandler(f_handler)
 def parse_homework_status(homework):
     homework_name = homework.get('homework_name')
     homework_status = homework.get('status')
-    if homework_status == 'approved':
-        verdict = 'Ревьюеру всё понравилось, работа зачтена!'
-    elif homework_status == 'rejected':
-        verdict = 'К сожалению, в работе нашлись ошибки.'
-    elif homework_status == 'reviewing':
-        verdict = 'Работа провереятся.'
-    else:
-        verdict = 'не известный статус работы'
-        logger.error('не известный статус работы')
+    status = {
+        'approved': 'Ревьюеру всё понравилось, работа зачтена!',
+        'rejected': 'К сожалению, в работе нашлись ошибки.',
+        'reviewing': 'Работа провереятся.'}
+    try:
+        verdict = status[homework_status]
+    except Exception as e:
+        verdict = f'не известный статус работы {e}'
+        logger.error(f'не известный статус работы {e}')
     return f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
 
 
