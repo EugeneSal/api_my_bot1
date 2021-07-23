@@ -91,4 +91,3 @@ def weather_30_hours(update, context):
                   f"🌬{round(resp['wind']['speed'], 1)}"
                   f"{wind(int(resp['wind']['deg']))} м/с"))
     conn.close()
-
