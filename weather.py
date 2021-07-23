@@ -56,7 +56,7 @@ def weather_30_hours(update, context):
     conn = sqlite3.connect("mydb.sqlite", check_same_thread=False)
     cursor = conn.cursor()
     chat = update.effective_chat
-    city_name = 'Котокель'
+    city_name = 'Kika'
     units = 'metric'
     r4 = requests.get(WEATHER_URL_4_DAYS.format(city_name, units, TOKEN)).json()
     counts1 = 10
