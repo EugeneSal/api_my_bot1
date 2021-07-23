@@ -48,7 +48,8 @@ def parse_homework_status(homework):
     except Exception as e:
         verdict = f'не известный статус работы {e}'
         logger.error(f'не известный статус работы {e}')
-    return f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
+    return (f'У вас проверили работу "{homework_name}"!\n\n{verdict}\n'
+            f'Комментарий: {homework.get("reviewer_comment")}')
 
 
 def get_homeworks(current_timestamp):
@@ -71,7 +72,7 @@ def send_message(message):
 
 
 def main():
-    current_timestamp = int(time.time())
+    current_timestamp = 0 # int(time.time())
     logger.debug('бот запущен')
     updater.dispatcher.add_handler(
         CommandHandler('weather', weather_send))
