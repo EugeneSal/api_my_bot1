@@ -19,15 +19,21 @@ updater = Updater(TELEGRAM_TOKEN, use_context=True)
 bot = telegram.Bot(TELEGRAM_TOKEN)
 
 logging.basicConfig(
-    handlers=[
-        RotatingFileHandler('main.log', maxBytes=5000000, backupCount=5)],
     level=logging.DEBUG,
-    format='%(asctime)s, %(levelname)s, %(name)s, %(message)s')
-console = logging.StreamHandler()
-console.setLevel(logging.DEBUG)
-c_format = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
-console.setFormatter(c_format)
-logging.getLogger("").addHandler(console)
+    format='%(asctime)s, %(message)s, %(levelname)s, %(name)s')
+handler = RotatingFileHandler('main.log', maxBytes=50000000, backupCount=5)
+logging.getLogger("").addHandler(handler)
+
+# logging.basicConfig(
+#     handlers=[
+#         RotatingFileHandler('main.log', maxBytes=5000000, backupCount=5)],
+#     level=logging.DEBUG,
+#     format='%(asctime)s, %(levelname)s, %(name)s, %(message)s')
+# console = logging.StreamHandler()
+# console.setLevel(logging.DEBUG)
+# c_format = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+# console.setFormatter(c_format)
+# logging.getLogger("").addHandler(console)
 
 
 # logger = logging.getLogger(__name__)

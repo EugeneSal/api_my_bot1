@@ -18,8 +18,8 @@ def vacation(update, context):
     month = difference_in_date // 30
     days = difference_in_date - (month * 30)
     hours = round((difference_in_time.total_seconds()/3600) % 24)
-    minutes = round(60 - (difference_in_time.total_seconds()/3600) % 1440)
-    print(minutes)
+    minutes = round((difference_in_time.seconds/3600)%60)
+    # 60 - abs(round(((difference_in_time.total_seconds() / 3600) % 1140)))
     mr = minutes % 10
     hr = hours % 10
     dr = days % 10
@@ -47,5 +47,6 @@ def vacation(update, context):
         min = 'минута'
     else:
         min = 'минуты'
-    bot.send_message(chat_id=chat.id, text=f'До отпуска осталось {month} {m} {days} {d} '
-                     f'{hours} {h} {minutes} {min}')
+    bot.send_message(
+        chat_id=chat.id, text=f'До отпуска осталось {month} {m} {days} {d} '
+                              f'{hours} {h} {minutes} {min}')
