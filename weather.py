@@ -21,19 +21,6 @@ UNITS = {'format': 2,
          'M': '',
          'Q': '',
          'lang': 'ru'}
-logger = logging.getLogger(__name__)
-c_handler = logging.StreamHandler()
-f_handler = logging.FileHandler('weather.log')
-c_handler.setLevel(logging.DEBUG)
-f_handler.setLevel(logging.DEBUG)
-c_format = logging.Formatter(
-    '%(name)s - %(levelname)s - %(message)s')
-f_format = logging.Formatter(
-    '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-c_handler.setFormatter(c_format)
-f_handler.setFormatter(f_format)
-logger.addHandler(c_handler)
-logger.addHandler(f_handler)
 
 bot = telegram.Bot(TELEGRAM_TOKEN)
 
@@ -53,13 +40,50 @@ def weather_send(update, context):
 
 
 def weather_30_hours(update, context):
+    try:
+        if len(update.message.text.split()) < 2:
+            weather_30_hours.NUMBER = 30
+            weather_30_hours.CITY = 'Кика'
+        if len(update.message.text.split()) < 3:
+            try:
+                weather_30_hours.NUMBER = int(update.message.text.split()[1])
+                weather_30_hours.CITY = 'Kika'
+            except Exception as e:
+                try:
+                    weather_30_hours.CITY = update.message.text.split()[1]
+                    weather_30_hours.NUMBER = 30
+                except Exception as e:
+                    weather_30_hours.CITY = 'Kika'
+                    weather_30_hours.NUMBER = 30
+                    logging.error(e)
+        if len(update.message.text.split()) == 3:
+            try:
+                weather_30_hours.NUMBER = int(update.message.text.split()[1])
+            except Exception as e:
+                weather_30_hours.CITY = update.message.text.split()[1]
+                logging.error(e)
+            try:
+                weather_30_hours.NUMBER = int(update.message.text.split()[2])
+            except Exception as e:
+                weather_30_hours.CITY = update.message.text.split()[2]
+                logging.error(e)
+    except AttributeError as e:
+        logging.error(f'значение часов не указано {e}')
+    except IndexError as e:
+        logging.error(f'значение часов не указано {e}')
+    n = weather_30_hours.NUMBER
     conn = sqlite3.connect("mydb.sqlite", check_same_thread=False)
     cursor = conn.cursor()
     chat = update.effective_chat
-    city_name = 'Kika'
+    city_name = weather_30_hours.CITY
     units = 'metric'
-    r4 = requests.get(WEATHER_URL_4_DAYS.format(city_name, units, TOKEN)).json()
-    counts1 = 10
+    r4 = requests.get(WEATHER_URL_4_DAYS.format(
+            city_name, units, TOKEN)).json()
+    if requests.get(WEATHER_URL_4_DAYS.format(
+            city_name, units, TOKEN)).json()['cod'] == '404':
+        r4 = requests.get(WEATHER_URL_4_DAYS.format(
+            'Moscow', units, TOKEN)).json()
+    counts1 = n // 3
     text1 = f"Погода в н.п. - {r4['city']['name']} на {counts1*3} часов:"
     bot.send_message(chat_id=chat.id, text=text1)
     r4 = r4['list']
@@ -72,11 +96,11 @@ def weather_30_hours(update, context):
         value = dt.datetime.fromtimestamp(timestamp)
         sql = "SELECT Icon FROM Atmosphere WHERE ID=?"
         des = (str(resp['weather'][0]['id']), )
-        logger.debug(des)
+        logging.debug(des)
         cursor.execute(sql, des)
         sql1 = "SELECT icon FROM Icon_list WHERE Day_icon=?"
         q1 = cursor.fetchall()[0][0]
-        logger.debug(q1)
+        logging.debug(q1)
         cursor.execute(sql1, (q1, ))
         q2 = cursor.fetchall()[0][0]
         bot.send_message(

@@ -27,7 +27,7 @@ updater = Updater(TELEGRAM_TOKEN, use_context=True)
 
 
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.ERROR,
     format='%(asctime)s, %(message)s, %(levelname)s, %(name)s')
 handler = RotatingFileHandler('main.log', maxBytes=50000000, backupCount=5)
 logging.getLogger("").addHandler(handler)
@@ -72,14 +72,14 @@ def main():
     current_timestamp = int(time.time())
     logging.debug('бот запущен')
     updater.dispatcher.add_handler(
-        CommandHandler('weather', weather_send))
+        CommandHandler('weathernow', weather_send))
     updater.dispatcher.add_handler(
         CommandHandler('vacation', vacation))
     updater.dispatcher.add_handler(
-        CommandHandler('weather30', weather_30_hours))
+        CommandHandler('weather', weather_30_hours))
     while True:
         try:
-            updater.start_polling(poll_interval=10.0)
+            updater.start_polling(poll_interval=15.0)
             home_work = get_homeworks(current_timestamp)
             new_homework = home_work.get('homeworks')
             if new_homework:
