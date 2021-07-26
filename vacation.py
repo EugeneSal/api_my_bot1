@@ -14,12 +14,12 @@ def vacation(update, context):
     chat = update.effective_chat
     time = dt.datetime.now()
     difference_in_time = DATE_VACATION - time
-    difference_in_date = difference_in_time.days
-    month = difference_in_date // 30
-    days = difference_in_date - (month * 30)
-    hours = round((difference_in_time.total_seconds()/3600) % 24)
-    minutes = round((difference_in_time.seconds/3600)%60)
-    # 60 - abs(round(((difference_in_time.total_seconds() / 3600) % 1140)))
+    month = difference_in_time.days // 30
+    days = difference_in_time.days - (month * 30)
+    hours = (difference_in_time - dt.timedelta(
+        days=((month * 30) + days))).seconds//3600
+    minutes = (round((difference_in_time - dt.timedelta(
+        days=((month * 30) + days))).seconds % 3600/60))
     mr = minutes % 10
     hr = hours % 10
     dr = days % 10

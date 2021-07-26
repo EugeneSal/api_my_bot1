@@ -10,45 +10,27 @@ from weather import weather_send, weather_30_hours
 from vacation import vacation
 
 load_dotenv()
-
-PRAKTIKUM_TOKEN = os.getenv('PRAKTIKUM_TOKEN')
-TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
-CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
+try:
+    PRAKTIKUM_TOKEN = os.getenv('PRAKTIKUM_TOKEN')
+    TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
+    CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
+    bot = telegram.Bot(token=TELEGRAM_TOKEN)
+except Exception as e:
+    token_error = f'Ошибка с токенами {e}.'
+    logging.error(token_error)
+if PRAKTIKUM_TOKEN is None or TELEGRAM_TOKEN is None or CHAT_ID is None:
+    token_error = 'Не получены ТОКЕН.'
+    logging.error(token_error)
+    bot.send_message(CHAT_ID, token_error)
 URL = 'https://praktikum.yandex.ru/api/{}'
 updater = Updater(TELEGRAM_TOKEN, use_context=True)
-bot = telegram.Bot(TELEGRAM_TOKEN)
+
 
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s, %(message)s, %(levelname)s, %(name)s')
 handler = RotatingFileHandler('main.log', maxBytes=50000000, backupCount=5)
 logging.getLogger("").addHandler(handler)
-
-# logging.basicConfig(
-#     handlers=[
-#         RotatingFileHandler('main.log', maxBytes=5000000, backupCount=5)],
-#     level=logging.DEBUG,
-#     format='%(asctime)s, %(levelname)s, %(name)s, %(message)s')
-# console = logging.StreamHandler()
-# console.setLevel(logging.DEBUG)
-# c_format = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
-# console.setFormatter(c_format)
-# logging.getLogger("").addHandler(console)
-
-
-# logger = logging.getLogger(__name__)
-# c_handler = logging.StreamHandler()
-# f_handler = logging.FileHandler('main.log')
-# c_handler.setLevel(logging.DEBUG)
-# f_handler.setLevel(logging.DEBUG)
-# c_format = logging.Formatter(
-#     '%(name)s - %(levelname)s - %(message)s')
-# f_format = logging.Formatter(
-#     '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-# c_handler.setFormatter(c_format)
-# f_handler.setFormatter(f_format)
-# logger.addHandler(c_handler)
-# logger.addHandler(f_handler)
 
 
 def parse_homework_status(homework):
@@ -67,7 +49,7 @@ def parse_homework_status(homework):
             f'Комментарий: {homework.get("reviewer_comment")}')
 
 
-def get_homeworks(current_timestamp):
+def get_homeworks(current_timestamp=int(time.time())):
     url = URL.format('user_api/homework_statuses/')
     headers = {'Authorization': f'OAuth {PRAKTIKUM_TOKEN}'}
     try:
