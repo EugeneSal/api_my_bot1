@@ -18,7 +18,7 @@ TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 KIKA = '52.48, 108.00'
 WEATHER_URL_4_DAYS = 'https://api.openweathermap.org/data/2.5/forecast?q=' \
                      '{}&units={}&lang=ru&appid={}'  # &lang=ru
-WEATHER_URL = f'https://wttr.in/{KIKA}'
+WEATHER_URL = 'https://wttr.in/{}'
 UNITS = {'format': 2,
          'M': '',
          'Q': '',
@@ -28,17 +28,20 @@ bot = telegram.Bot(TELEGRAM_TOKEN)
 
 
 def what_weather(city):
-    response = requests.get(WEATHER_URL, params=UNITS)
+    response = requests.get(WEATHER_URL.format(city), params=UNITS)
     if response.status_code == 200:
-        return f'Погода в Кике: {response.text.strip()}'
+        return f'Погода в {city}: {response.text.strip()}'
     else:
         return '<ошибка на сервере>'
 
 
 def weather_send(update, context):
     chat = update.effective_chat
+    keyword = ' '.join(context.args)
+    hours = ''.join(re.findall(r'\d+', keyword))
+    word = ' '.join(keyword.replace(hours, '').split())
     context.bot.send_message(chat_id=chat.id,
-                             text=what_weather(KIKA))
+                             text=what_weather(word))
 
 
 def weather_30_hours(update, context):
