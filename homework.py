@@ -81,7 +81,7 @@ def main():
         CommandHandler('weather', weather_30_hours))
     while True:
         try:
-            updater.start_polling(poll_interval=15.0)
+            updater.start_polling(poll_interval=10.0)
             home_work = get_homeworks(current_timestamp)
             new_homework = home_work.get('homeworks')
             if new_homework:

@@ -1,4 +1,6 @@
 import os
+import re
+
 import requests
 import datetime as dt
 import logging
@@ -15,7 +17,7 @@ TOKEN = os.getenv('WEATHER_API')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 KIKA = '52.48, 108.00'
 WEATHER_URL_4_DAYS = 'https://api.openweathermap.org/data/2.5/forecast?q=' \
-                     '{}&units={}&appid={}'  # &lang=ru
+                     '{}&units={}&lang=ru&appid={}'  # &lang=ru
 WEATHER_URL = f'https://wttr.in/{KIKA}'
 UNITS = {'format': 2,
          'M': '',
@@ -40,42 +42,15 @@ def weather_send(update, context):
 
 
 def weather_30_hours(update, context):
-    try:
-        if len(update.message.text.split()) < 2:
-            weather_30_hours.NUMBER = 30
-            weather_30_hours.CITY = 'Кика'
-        if len(update.message.text.split()) < 3:
-            try:
-                weather_30_hours.NUMBER = int(update.message.text.split()[1])
-                weather_30_hours.CITY = 'Kika'
-            except Exception as e:
-                try:
-                    weather_30_hours.CITY = update.message.text.split()[1]
-                    weather_30_hours.NUMBER = 30
-                except Exception as e:
-                    weather_30_hours.CITY = 'Kika'
-                    weather_30_hours.NUMBER = 30
-                    logging.error(e)
-        if len(update.message.text.split()) == 3:
-            try:
-                weather_30_hours.NUMBER = int(update.message.text.split()[1])
-            except Exception as e:
-                weather_30_hours.CITY = update.message.text.split()[1]
-                logging.error(e)
-            try:
-                weather_30_hours.NUMBER = int(update.message.text.split()[2])
-            except Exception as e:
-                weather_30_hours.CITY = update.message.text.split()[2]
-                logging.error(e)
-    except AttributeError as e:
-        logging.error(f'значение часов не указано {e}')
-    except IndexError as e:
-        logging.error(f'значение часов не указано {e}')
-    n = weather_30_hours.NUMBER
+    keyword = ' '.join(context.args)
+    hours = ''.join(re.findall(r'\d+', keyword))
+    word = ' '.join(keyword.replace(hours, '').split())
+    if hours == '':
+        hours = 21
     conn = sqlite3.connect("mydb.sqlite", check_same_thread=False)
     cursor = conn.cursor()
     chat = update.effective_chat
-    city_name = weather_30_hours.CITY
+    city_name = word  # weather_30_hours.CITY
     units = 'metric'
     r4 = requests.get(WEATHER_URL_4_DAYS.format(
             city_name, units, TOKEN)).json()
@@ -83,7 +58,7 @@ def weather_30_hours(update, context):
             city_name, units, TOKEN)).json()['cod'] == '404':
         r4 = requests.get(WEATHER_URL_4_DAYS.format(
             'Moscow', units, TOKEN)).json()
-    counts1 = n // 3
+    counts1 = int(hours) // 3
     text1 = f"Погода в н.п. - {r4['city']['name']} на {counts1*3} часов:"
     bot.send_message(chat_id=chat.id, text=text1)
     r4 = r4['list']
