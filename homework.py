@@ -11,6 +11,15 @@ from weather import weather_send, weather_30_hours
 from vacation import vacation
 
 load_dotenv()
+URL = 'https://praktikum.yandex.ru/api/{}'
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+PATH_TO_LOG = os.path.join(BASE_DIR, 'main.log')
+f_handler = RotatingFileHandler(PATH_TO_LOG, maxBytes=50000000, backupCount=5)
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s, %(message)s, %(levelname)s, %(name)s',
+    handlers=[logging.StreamHandler(), f_handler])
+
 try:
     PRAKTIKUM_TOKEN = os.getenv('PRAKTIKUM_TOKEN')
     TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
@@ -24,15 +33,8 @@ if PRAKTIKUM_TOKEN is None or TELEGRAM_TOKEN is None or CHAT_ID is None:
     logging.critical(token_error)
     bot.send_message(CHAT_ID, token_error)
     sys.exit()
-URL = 'https://praktikum.yandex.ru/api/{}'
+
 updater = Updater(TELEGRAM_TOKEN, use_context=True)
-
-
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s, %(message)s, %(levelname)s, %(name)s')
-handler = RotatingFileHandler('main.log', maxBytes=50000000, backupCount=5)
-logging.getLogger("").addHandler(handler)
 
 
 def parse_homework_status(homework):
@@ -41,9 +43,11 @@ def parse_homework_status(homework):
     status = {
         'approved': 'Ревьюеру всё понравилось, работа зачтена!',
         'rejected': 'К сожалению, в работе нашлись ошибки.',
-        'reviewing': 'Работа провереятся.'}
+        'reviewing': 'провереятся!'}
     try:
         verdict = status[homework_status]
+        if homework_status == 'reviewing':
+            return f'Работа "{homework_name}"!\n\n{verdict}'
     except Exception as e:
         verdict = f'не известный статус работы {e}'
         logging.error(f'не известный статус работы {e}')
@@ -59,14 +63,21 @@ def get_homeworks(current_timestamp):
             url,
             headers=headers,
             params={'from_date': current_timestamp})
+    except Exception as e:
+        logging.error(f'Сетевая ошибка {e}. Попробуйте позже')
+        return send_message(f'Сетевая ошибка {e}. Попробуйте позже')
+    if homework_statuses.status_code != 200:
+        logging.error('Ошибка на сервере. Попробуйте позже')
+        return send_message('Ошибка на сервере. Попробуйте позже')
+    try:
         return homework_statuses.json()
     except Exception as e:
-        send_message(f'Сообщение не получилось отправить: {e}')
-        logging.error('Exception occurred', exc_info=True)
+        logging.error('Что то не так с API', exc_info=True)
+        return send_message(f'Что то не так с API {e}')
 
 
 def send_message(message):
-    logging.info(message)
+    logging.info(f'Сообщение <<{message}>> отправлено')
     return bot.send_message(CHAT_ID, message)
 
 
@@ -86,7 +97,7 @@ def main():
             new_homework = home_work.get('homeworks')
             if new_homework:
                 send_message(parse_homework_status(new_homework[0]))
-            current_timestamp = home_work.get('current_date')
+            current_timestamp = home_work.get('current_date', int(time.time()))
             time.sleep(5 * 60)  # Опрашивать раз в пять минут
         except Exception as e:
             logging.error(f'Бот упал с ошибкой: {e}')
