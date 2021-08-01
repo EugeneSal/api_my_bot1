@@ -7,13 +7,12 @@ import logging
 import telegram
 import sqlite3
 from dotenv import load_dotenv
-
 from wind_direct import wind
 
 load_dotenv()
 TOKEN = os.getenv('WEATHER_API')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
-
+CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 # константы для команды weather функции weather_30_hours
 UNITS = 'metric'
 TORR = 133.3223684
@@ -26,6 +25,7 @@ UNITS_NOW = {'format': 2,
              'M': '',
              'Q': '',
              'lang': 'ru'}
+LOCATION, HOURS = range(2)
 
 bot = telegram.Bot(TELEGRAM_TOKEN)
 
@@ -47,15 +47,15 @@ def weather_send(update, context):
                              text=what_weather(word))
 
 
-def weather_30_hours(update, context):
-    keyword = ' '.join(context.args)
-    hours = ''.join(re.findall(r'\d+', keyword))
-    city_name = ' '.join(keyword.replace(hours, '').split())
-    if hours == '':
+def weather_30_hours(city_name, hours):  # update, context):
+    # keyword = ' '.join(context.args)
+    # hours = ''.join(re.findall(r'\d+', keyword))
+    # city_name = ' '.join(keyword.replace(hours, '').split())
+    # chat = update.effective_chat
+    if hours == '' or hours == 0:
         hours = 30
     conn = sqlite3.connect("mydb.sqlite", check_same_thread=False)
     cursor = conn.cursor()
-    chat = update.effective_chat
     response_4_days = requests.get(WEATHER_URL_4_DAYS.format(
             city_name, UNITS, TOKEN)).json()
     if requests.get(WEATHER_URL_4_DAYS.format(
@@ -65,7 +65,7 @@ def weather_30_hours(update, context):
     counts1 = int(hours) // 3
     text = (f"Погода в н.п. - "
             f"{response_4_days['city']['name']} на {counts1*3} часов:")
-    bot.send_message(chat_id=chat.id, text=text)
+    bot.send_message(chat_id=CHAT_ID, text=text)
     response_4_days = response_4_days['list']
     counts = 0
     for response in response_4_days:
@@ -83,7 +83,7 @@ def weather_30_hours(update, context):
         sql2 = "SELECT icon FROM Icon_list WHERE Day_icon=?"
         cursor.execute(sql2, (sql_response1, ))
         sql_response2 = cursor.fetchall()[0][0]
-        update.message.reply_text(
+        bot.send_message(chat_id=CHAT_ID, text=(
             f"🕗 {time_to_display.strftime('%Y-%m-%d %H:%M')} "
             f"⛅{response['clouds']['all']}"
             f"🌡{response['main']['temp']}°С "
@@ -92,5 +92,5 @@ def weather_30_hours(update, context):
             f" 👀{round(response['visibility'] / 1000)} км "
             f"{sql_response2} "
             f"🌬{round(response['wind']['speed'], 1)}"
-            f"{wind(int(response['wind']['deg']))} м/с")
+            f"{wind(int(response['wind']['deg']))} м/с"))
     conn.close()

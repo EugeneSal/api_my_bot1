@@ -5,15 +5,29 @@ import os
 import time
 import requests
 import telegram
-from telegram.ext import Updater, CommandHandler
+from telegram.ext import (
+    Updater,
+    CommandHandler,
+    MessageHandler,
+    Filters,
+    ConversationHandler,
+)
 from dotenv import load_dotenv
-from weather import weather_send, weather_30_hours
+from weather import weather_send  # , weather_30_hours,
 from vacation import vacation
+from handler import (
+    start,
+    regular_choice,
+    received_information,
+    custom_choice,
+    done)
 
 load_dotenv()
+LOCATION, HOURS = range(2)
 URL = 'https://praktikum.yandex.ru/api/{}'
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PATH_TO_LOG = os.path.join(BASE_DIR, 'main.log')
+CHOOSING, TYPING_REPLY, TYPING_CHOICE = range(3)
 f_handler = RotatingFileHandler(PATH_TO_LOG, maxBytes=50000000, backupCount=5)
 logging.basicConfig(
     level=logging.DEBUG,
@@ -84,20 +98,47 @@ def send_message(message):
 def main():
     current_timestamp = int(time.time())
     logging.debug('бот запущен')
+    dispatcher = updater.dispatcher
     updater.dispatcher.add_handler(
         CommandHandler('weathernow', weather_send))
     updater.dispatcher.add_handler(
         CommandHandler('vacation', vacation))
-    updater.dispatcher.add_handler(
-        CommandHandler('weather', weather_30_hours))
+    # updater.dispatcher.add_handler(
+    #     CommandHandler('weather', weather_30_hours))
+    conv_handler = ConversationHandler(
+        entry_points=[CommandHandler('start', start)],
+        states={
+            CHOOSING: [
+                MessageHandler(
+                    Filters.regex('^(Кика|Котокель|Улан-Удэ)$'), regular_choice
+                ),
+                MessageHandler(Filters.regex('^в другом$'), custom_choice),
+            ],
+            TYPING_CHOICE: [
+                MessageHandler(
+                    Filters.text & ~(Filters.command | Filters.regex('^Выйти')),
+                    regular_choice
+                )
+            ],
+            TYPING_REPLY: [
+                MessageHandler(
+                    Filters.text & ~(Filters.command | Filters.regex('^Выйти')),
+                    received_information,
+                )
+            ],
+        },
+        fallbacks=[MessageHandler(Filters.regex('^Выйти'), done)],
+    )
+    dispatcher.add_handler(conv_handler)
     while True:
         try:
-            updater.start_polling(poll_interval=10.0)
+            updater.start_polling() #  poll_interval=5.0)
             home_work = get_homeworks(current_timestamp)
             new_homework = home_work.get('homeworks')
             if new_homework:
                 send_message(parse_homework_status(new_homework[0]))
             current_timestamp = home_work.get('current_date', int(time.time()))
+            updater.idle()
             time.sleep(5 * 60)  # Опрашивать раз в пять минут
         except Exception as e:
             logging.error(f'Бот упал с ошибкой: {e}')
