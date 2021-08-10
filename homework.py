@@ -24,15 +24,12 @@ from handler import (
 
 load_dotenv()
 LOCATION, HOURS = range(2)
-URL = 'https://praktikum.yandex.ru/api/{}'
+URL = 'https://practicum.yandex.ru/api/{}'
+CHOOSING, TYPING_REPLY, TYPING_CHOICE = range(3)
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PATH_TO_LOG = os.path.join(BASE_DIR, 'main.log')
-CHOOSING, TYPING_REPLY, TYPING_CHOICE = range(3)
 f_handler = RotatingFileHandler(PATH_TO_LOG, maxBytes=50000000, backupCount=5)
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s, %(message)s, %(levelname)s, %(name)s',
-    handlers=[logging.StreamHandler(), f_handler])
 
 try:
     PRAKTIKUM_TOKEN = os.getenv('PRAKTIKUM_TOKEN')
@@ -58,13 +55,12 @@ def parse_homework_status(homework):
         'approved': 'Ревьюеру всё понравилось, работа зачтена!',
         'rejected': 'К сожалению, в работе нашлись ошибки.',
         'reviewing': 'провереятся!'}
-    try:
-        verdict = status[homework_status]
-        if homework_status == 'reviewing':
-            return f'Работа "{homework_name}"!\n\n{verdict}'
-    except Exception as e:
-        verdict = f'не известный статус работы {e}'
-        logging.error(f'не известный статус работы {e}')
+
+    verdict = status.get(homework_status, 'не известный статус работы')
+
+    if homework_status == 'reviewing':
+        return f'Работа "{homework_name}"!\n\n{verdict}'
+
     return (f'У вас проверили работу "{homework_name}"!\n\n{verdict}\n'
             f'Комментарий: {homework.get("reviewer_comment")}')
 
@@ -81,8 +77,10 @@ def get_homeworks(current_timestamp):
         logging.error(f'Сетевая ошибка {e}. Попробуйте позже')
         return send_message(f'Сетевая ошибка {e}. Попробуйте позже')
     if homework_statuses.status_code != 200:
-        logging.error('Ошибка на сервере. Попробуйте позже')
-        return send_message('Ошибка на сервере. Попробуйте позже')
+        logging.error(f'Код ошибки {homework_statuses.status_code}'
+                      f' Попробуйте позже')
+        return send_message(f'Код ошибки {homework_statuses.status_code}'
+                            f' Попробуйте позже')
     try:
         return homework_statuses.json()
     except Exception as e:
@@ -132,7 +130,7 @@ def main():
     dispatcher.add_handler(conv_handler)
     while True:
         try:
-            updater.start_polling() #  poll_interval=5.0)
+            updater.start_polling()  # poll_interval=5.0)
             home_work = get_homeworks(current_timestamp)
             new_homework = home_work.get('homeworks')
             if new_homework:
@@ -148,4 +146,8 @@ def main():
 
 
 if __name__ == '__main__':
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(asctime)s, %(message)s, %(levelname)s, %(name)s',
+        handlers=[logging.StreamHandler(), f_handler])
     main()
