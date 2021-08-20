@@ -94,7 +94,7 @@ def send_message(message):
 
 
 def main():
-    current_timestamp = int(time.time())
+    current_timestamp = 1628825600  # int(time.time())
     logging.debug('бот запущен')
     dispatcher = updater.dispatcher
     updater.dispatcher.add_handler(
