@@ -53,13 +53,13 @@ def received_information(update: Update, context: CallbackContext) -> int:
     category = user_data['choice']
     user_data[category] = text
     del user_data['choice']
-
     update.message.reply_text(
         f'Погода в н.п. {facts_to_str(user_data)}, Сэр:',
         reply_markup=markup,)
     for key, value in user_data.items():
+        chat_id = update.effective_chat['id']
         logging.debug(f'{key}, {value}, {user_data.items()}')
-        weather_30_hours(key, value)
+        weather_30_hours(key, value, chat_id)
 
     user_data.clear()
     return CHOOSING

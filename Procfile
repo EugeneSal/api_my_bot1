@@ -1,1 +1,1 @@
-worker: python homework.py
+worker: python my_bot.py

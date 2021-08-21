@@ -26,7 +26,6 @@ UNITS_NOW = {'format': 2,
              'Q': '',
              'lang': 'ru'}
 LOCATION, HOURS = range(2)
-
 bot = telegram.Bot(TELEGRAM_TOKEN)
 
 
@@ -47,11 +46,7 @@ def weather_send(update, context):
                              text=what_weather(word))
 
 
-def weather_30_hours(city_name, hours):  # update, context):
-    # keyword = ' '.join(context.args)
-    # hours = ''.join(re.findall(r'\d+', keyword))
-    # city_name = ' '.join(keyword.replace(hours, '').split())
-    # chat = update.effective_chat
+def weather_30_hours(city_name, hours, chat_id):
     if hours == '' or hours == 0:
         hours = 30
     conn = sqlite3.connect("mydb.sqlite", check_same_thread=False)
@@ -63,9 +58,6 @@ def weather_30_hours(city_name, hours):  # update, context):
         response_4_days = requests.get(WEATHER_URL_4_DAYS.format(
             'Moscow', UNITS, TOKEN)).json()
     counts1 = int(hours) // 3
-    text = (f"Погода в н.п. - "
-            f"{response_4_days['city']['name']} на {counts1*3} часов:")
-    bot.send_message(chat_id=CHAT_ID, text=text)
     response_4_days = response_4_days['list']
     counts = 0
     for response in response_4_days:
@@ -83,7 +75,7 @@ def weather_30_hours(city_name, hours):  # update, context):
         sql2 = "SELECT icon FROM Icon_list WHERE Day_icon=?"
         cursor.execute(sql2, (sql_response1, ))
         sql_response2 = cursor.fetchall()[0][0]
-        bot.send_message(chat_id=CHAT_ID, text=(
+        bot.send_message(chat_id=chat_id, text=(
             f"🕗 {time_to_display.strftime('%Y-%m-%d %H:%M')} "
             f"⛅{response['clouds']['all']}"
             f"🌡{response['main']['temp']}°С "
