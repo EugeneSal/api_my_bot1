@@ -29,4 +29,4 @@ pip install -r requirements.txt
 Если устанавливать проект на локальном сервере, то в файле `.env` нужно указать `TELEGRAM_TOKEN = "тут токен бота"`, `WEATHER_API = "тут токен полученный на сайте погодного сервиса"`
 Если устанавливать проект на сервере `Heroku` то в меню `settings` найти `config vars` и в значении `KEY` установить название токена в значении `VALUE` сам токен.
 * токен бота `TELEGRAM_TOKEN` 
-* токен погоды `WEATHER_API` для получения токена погоды нужно зарегистрироваться на сайте и получить там токен https://api.openweathermap.org/
+* токен погоды `WEATHER_API` для получения токена погоды нужно зарегистрироваться на сайте https://api.openweathermap.org/ и получить токен по адресу https://home.openweathermap.org/api_keys
